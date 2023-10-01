@@ -6,9 +6,9 @@ import { useGetTeamMembersQuery } from '../features/teamMembers/teamMembersApi';
 
 const EditTaskForm = () => {
   const { taskId: id } = useParams();
-  const { data: projects, isLoading: isProjectLoading, isError: isProjectError } = useGetProjectsQuery();
-  const { data: teamMembers, isLoading, isError } = useGetTeamMembersQuery();
-  const { data: task, isLoading: isTaskLoading, isError: isTaskError } = useGetTaskQuery(id);
+  const { data: proj, isLoading: isProjectLoading, isError: isProjectError } = useGetProjectsQuery();
+  const { data, isLoading, isError } = useGetTeamMembersQuery();
+  const { data: singleTask, isLoading: isTaskLoading, isError: isTaskError } = useGetTaskQuery(id);
   const [editTask, { data: editedTask }] = useEditTaskMutation();
   const [taskName, setTaskName] = useState('');
   const [teamMember, setTeamMember] = useState('');
@@ -16,14 +16,25 @@ const EditTaskForm = () => {
   const [deadline, setDeadline] = useState('');
   const navigate = useNavigate();
 
+  const task = singleTask?.data;
+  const teamMembers = data?.data;
+  const projects = proj?.data;
+
   useEffect(() => {
-    if (task?.id) {
+    if (task?._id) {
       setTaskName(task.taskName);
       setTeamMember(task.teamMember.name);
       setProjectName(task.project.projectName);
       setDeadline(task.deadline);
     }
   }, [task]);
+
+  useEffect(() => {
+    if (editedTask) {
+      navigate('/');
+      console.log('edited task gotten');
+    }
+  }, [editedTask, navigate]);
 
   const handleSelectChange = (e) => {
     setProjectName(e.target.value);
@@ -36,21 +47,21 @@ const EditTaskForm = () => {
   const handleEditTask = (e) => {
     e.preventDefault();
 
+    const idOfTeamMember = teamMembers.find((member) => member.name === teamMember);
+    const idOfProject = projects.find((member) => member.projectName === projectName);
+
     const updatedData = {
       taskName,
-      teamMember: teamMembers.find((member) => member.name === teamMember),
-      project: projects.find((member) => member.projectName === projectName),
+      teamMember: idOfTeamMember._id,
+      project: idOfProject._id,
       deadline,
       status: task?.status,
     };
-
-    // console.log(updatedData);
 
     editTask({
       id,
       updatedData,
     });
-    navigate('/');
   };
 
   // decide what to render
@@ -95,7 +106,7 @@ const EditTaskForm = () => {
               Select Team Member
             </option>
             {teamMembers.map((member) => (
-              <option key={member.id} value={member.name}>
+              <option key={member._id} value={member.name}>
                 {member.name}
               </option>
             ))}
@@ -109,7 +120,7 @@ const EditTaskForm = () => {
               Select Project
             </option>
             {projects.map((project) => (
-              <option key={project.id} value={project.projectName}>
+              <option key={project._id} value={project.projectName}>
                 {project.projectName}
               </option>
             ))}

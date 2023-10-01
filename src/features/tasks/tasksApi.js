@@ -17,11 +17,13 @@ export const tasksApi = apiSlice.injectEndpoints({
       async onQueryStarted(arg, { queryFulfilled, dispatch }) {
         try {
           const data = await queryFulfilled;
-          if (data?.data?.id) {
+          if (data?.data?._id) {
             // update messages cache pessimistically start
             dispatch(
               apiSlice.util.updateQueryData('getTasks', undefined, (draft) => {
-                draft.push(data?.data);
+                const newData = { ...arg.data, _id: data.data._id };
+                draft.push(newData); // to add the new data to the bottom
+                // draft.unshift(newData); // to add the new data to the top
               }),
             );
             // update messages cache pessimistically end
@@ -47,11 +49,12 @@ export const tasksApi = apiSlice.injectEndpoints({
       async onQueryStarted(arg, { queryFulfilled, dispatch }) {
         try {
           const data = await queryFulfilled;
-          if (data?.data?.id) {
+
+          if (data?.data?._id) {
             // update messages cache pessimistically start
             dispatch(
               apiSlice.util.updateQueryData('getTasks', undefined, (draft) => {
-                const editedTaskIndex = draft.findIndex((c) => c.id == arg.id);
+                const editedTaskIndex = draft.findIndex((c) => c._id == arg.id);
                 draft.splice(editedTaskIndex, 1, data?.data);
               }),
             );
@@ -69,18 +72,30 @@ export const tasksApi = apiSlice.injectEndpoints({
       }),
       async onQueryStarted(arg, { queryFulfilled, dispatch }) {
         // optimistic cache update start
-        const result = dispatch(
-          apiSlice.util.updateQueryData('getTasks', undefined, (draft) => {
-            const deletedTaskIndex = draft.findIndex((c) => c.id == arg.id);
-            draft.splice(deletedTaskIndex, 1);
-          }),
-        );
+        // const result = dispatch(
+        //   apiSlice.util.updateQueryData('getTasks', undefined, (draft) => {
+        //     const deletedTaskIndex = draft.findIndex((c) => c._id == arg.id);
+        //     draft.splice(deletedTaskIndex, 1);
+        //   }),
+        // );
         // optimistic cache update end
         try {
           const data = await queryFulfilled;
-          return data;
+          if (data?.data?._id) {
+            dispatch(
+              apiSlice.util.updateQueryData('getTasks', undefined, (draft) => {
+                console.log(JSON.stringify(draft));
+                console.log(data.data);
+                const deletedTaskIndex = draft.findIndex((c) => c._id == arg.id);
+                console.log(deletedTaskIndex);
+                draft.splice(deletedTaskIndex, 1);
+                console.log(JSON.stringify(draft));
+                return draft;
+              }),
+            );
+          }
         } catch (err) {
-          result.undo();
+          console.log(err);
         }
       },
     }),

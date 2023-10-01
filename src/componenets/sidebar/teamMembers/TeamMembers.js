@@ -3,7 +3,9 @@ import { useGetTeamMembersQuery } from '../../../features/teamMembers/teamMember
 import TeamMember from './TeamMember';
 
 const TeamMembers = () => {
-  const { data: teamMembers, isLoading, isError, error } = useGetTeamMembersQuery();
+  const { data, isLoading, isError, error } = useGetTeamMembersQuery();
+
+  const teamMembers = data?.data;
 
   let content;
 
@@ -18,7 +20,7 @@ const TeamMembers = () => {
   } else if (!isLoading && !isError && teamMembers?.length === 0) {
     content = <div>No team member found!</div>;
   } else if (!isLoading && !isError && teamMembers?.length > 0) {
-    content = teamMembers.map((teamMember) => <TeamMember key={teamMember.id} teamMember={teamMember} />);
+    content = teamMembers.map((teamMember) => <TeamMember key={teamMember._id} teamMember={teamMember} />);
   }
 
   return (

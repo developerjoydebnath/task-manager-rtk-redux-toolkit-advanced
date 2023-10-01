@@ -1,11 +1,11 @@
 import React, { useEffect, useState } from 'react';
 import { useNavigate } from 'react-router-dom';
-import { useDeleteTaskMutation, useEditTaskStatusMutation } from '../../features/tasks/tasksApi';
+import { useDeleteTaskMutation, useEditTaskMutation } from '../../features/tasks/tasksApi';
 
 const Task = ({ task }) => {
-  const { id, deadline, taskName, project, teamMember, status } = task;
+  const { _id: id, deadline, taskName, project, teamMember, status } = task;
   const [taskStatus, setTaskStatus] = useState(status);
-  const [editTaskStatus, { data, isError }] = useEditTaskStatusMutation();
+  const [editTask, { data, isError }] = useEditTaskMutation();
   const [deleteTask, { isLoading, isSuccess }] = useDeleteTaskMutation();
   const navigate = useNavigate();
 
@@ -15,14 +15,23 @@ const Task = ({ task }) => {
   const month = date.toLocaleDateString('en-US', options);
 
   useEffect(() => {
-    if (data?.id) {
+    if (data?._id) {
       setTaskStatus(data.status);
     }
   }, [data, taskStatus]);
 
+  useEffect(() => {
+    if (isSuccess) {
+      setTaskStatus(status);
+    }
+  }, [isSuccess, status]);
+
   const handleStatusChange = (e) => {
+    const updated = { ...task, status: e.target.value, project: task.project._id, teamMember: task.teamMember._id };
+
     // setTaskStatus(e.target.value);
-    editTaskStatus({ id, updatedData: { ...task, status: e.target.value } });
+
+    editTask({ id, updatedData: updated });
   };
 
   const handleDeleteTask = (id) => {
@@ -31,6 +40,8 @@ const Task = ({ task }) => {
       deleteTask({ id, task });
     }
   };
+
+  if (isLoading) return <div>Loading</div>;
 
   return (
     <div className="lws-task">

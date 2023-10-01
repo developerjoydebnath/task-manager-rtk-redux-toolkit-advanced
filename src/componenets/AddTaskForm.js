@@ -1,18 +1,27 @@
-import React, { useState } from 'react';
+import React, { useEffect, useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { useGetProjectsQuery } from '../features/projects/projectsApi';
 import { useAddTaskMutation } from '../features/tasks/tasksApi';
 import { useGetTeamMembersQuery } from '../features/teamMembers/teamMembersApi';
 
 const AddTaskForm = () => {
-  const { data: projects, isLoading: isProjectLoading, isError: isProjectError } = useGetProjectsQuery();
-  const { data: teamMembers, isLoading, isError } = useGetTeamMembersQuery();
+  const { data, isLoading: isProjectLoading, isError: isProjectError } = useGetProjectsQuery();
+  const { data: teamMem, isLoading, isError } = useGetTeamMembersQuery();
   const [addTask, { data: addedTask, isError: taskError, isSuccess }] = useAddTaskMutation();
   const [taskName, setTaskName] = useState('');
   const [teamMember, setTeamMember] = useState('');
   const [projectName, setProjectName] = useState('');
   const [deadline, setDeadline] = useState('');
   const navigate = useNavigate();
+
+  const teamMembers = teamMem?.data;
+  const projects = data?.data;
+
+  useEffect(() => {
+    if (isSuccess) {
+      navigate('/');
+    }
+  }, [isSuccess, navigate]);
 
   const handleSelectChange = (e) => {
     setProjectName(e.target.value);
@@ -36,7 +45,6 @@ const AddTaskForm = () => {
     addTask({
       data: task,
     });
-    navigate('/');
   };
 
   // decide what to render
@@ -68,7 +76,7 @@ const AddTaskForm = () => {
             name="taskName"
             id="lws-taskName"
             required
-            placeholder="Implement RTK Query"
+            placeholder="Task Name"
             value={taskName}
             onChange={(e) => setTaskName(e.target.value)}
           />
@@ -81,7 +89,7 @@ const AddTaskForm = () => {
               Select Team Member
             </option>
             {teamMembers.map((member) => (
-              <option key={member.id} value={member.name}>
+              <option key={member._id} value={member.name}>
                 {member.name}
               </option>
             ))}
@@ -95,7 +103,7 @@ const AddTaskForm = () => {
               Select Project
             </option>
             {projects.map((project) => (
-              <option key={project.id} value={project.projectName}>
+              <option key={project._id} value={project.projectName}>
                 {project.projectName}
               </option>
             ))}

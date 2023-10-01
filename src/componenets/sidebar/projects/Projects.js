@@ -3,7 +3,9 @@ import { useGetProjectsQuery } from '../../../features/projects/projectsApi';
 import Project from './Project';
 
 const Projects = () => {
-  const { data: projects, isError, isLoading, error } = useGetProjectsQuery();
+  const { data, isError, isLoading, error } = useGetProjectsQuery();
+
+  const projects = data?.data;
 
   let content;
 
@@ -18,7 +20,7 @@ const Projects = () => {
   } else if (!isLoading && !isError && projects?.length === 0) {
     content = <div>No conversations found!</div>;
   } else if (!isLoading && !isError && projects?.length > 0) {
-    content = projects.map((project) => <Project key={project.id} project={project} />);
+    content = projects.map((project) => <Project key={project._id} project={project} />);
   }
 
   return (
